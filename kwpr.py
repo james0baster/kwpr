@@ -1,12 +1,11 @@
 import sys
 import psycopg2
+import datetime
 from googleapiclient import sample_tools
 
-import unicodecsv, datetime, csv
-
 today = datetime.datetime.today()
-tanggal = today - datetime.timedelta(weeks=1)
-tanggal = tanggal.strftime("%Y-%m-%d")
+date = today - datetime.timedelta(weeks=1)
+date = date.strftime("%Y-%m-%d")
 
 uris = {'https://www.zalora.com.hk': 'hk',
         'https://zh.zalora.com.hk': 'zh',
@@ -33,10 +32,10 @@ def main(argv):
     for uri in uris:
         for device in devices:
 
-          negara = country_code[uri[-2:]]
+          country = country_code[uri[-2:]]
           request1 = {
-                  'startDate': tanggal,
-                  'endDate': tanggal,
+                  'startDate': date,
+                  'endDate': date,
                   'dimensions': ['page','query'],
                   'dimensionFilterGroups': [{
                       'groupby': 'and',
@@ -46,7 +45,7 @@ def main(argv):
                           },
                           {
                               'dimension': 'country',
-                              'expression': negara
+                              'expression': country
                               }]
                           }],
                   'rowLimit': 5000
@@ -67,11 +66,11 @@ def main(argv):
                                                     }
          
 
-          simpan(lastweek_results, tanggal, device, negara)
+          save(lastweek_results, date, device, country)
 
     outfile.close()
 
-def simpan(lastweek_results, tanggal, device, negara):
+def save(lastweek_results, date, device, country):
 
     for key in lastweek_results:
         obj = lastweek_results[key]
@@ -82,10 +81,10 @@ def simpan(lastweek_results, tanggal, device, negara):
         impressions = obj['impressions']
         ctr = '{:.2f}%'.format(obj['ctr']*100)
         position = '{:.1f}'.format(obj['position'])
-        conn_string = "host='rahasia' dbname='rahasia' user='rahasia' password='rahasia'"
+        conn_string = "host='secret' dbname='secret' user='secret' password='secret'"
         conn = psycopg2.connect(conn_string)
         cursor = conn.cursor()
-        values = "'"+negara+"', '"+str(tanggal)+"', '"+device+"', '"+page+"', '"+query+"', "+str(impressions)+", "+str(clicks)+", '"+str(ctr)+"', "+str(position)
+        values = "'"+country+"', '"+str(date)+"', '"+device+"', '"+page+"', '"+query+"', "+str(impressions)+", "+str(clicks)+", '"+str(ctr)+"', "+str(position)
         statement = 'INSERT INTO seo.kwpr_gsc (country, date, device, page, query, impressions, clicks, ctr, position ) VALUES (' + values + ');'
         cursor.execute(statement)
         conn.commit()
